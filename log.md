@@ -15,6 +15,9 @@
 - venv je modul, ktory vytvori izolovane python prostredie pre jeden konkretny projekt, aby sa kniznice a nastavenia jednotlivych projektov navzajom neovplyvnovali
 - Path() sluzi na pracu s cestami, kde chceme nieco hladat
 - file.suffix umoznuje zistit typ suboru
+- enumerate() na ziskanie cisla riadku
+- pouzitie kniznice pypdf
+- 
 
 ### Architektura projektu
 
@@ -69,4 +72,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 - filtrovanie dokumentov
 - vyber konkretneho dokumentu
 - zobrazenie obsahu dokumentu
+- podpora pdf dokumentov
+- vyhladavanie vyrazu v dokumentoch
+- zobrazenie cisla riadku s najdenym vyrazom
 
