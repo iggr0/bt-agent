@@ -1,0 +1,1 @@
+Tu su moje poznamky
