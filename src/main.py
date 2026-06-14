@@ -22,6 +22,73 @@ def test_ai():
 
     print(answer)
 
+def find_relevant_lines(question):
+    data_path = Path("data")
+    files = list(data_path.iterdir())
+
+    keywords = question.lower().split()
+    relevant_lines = []
+
+    for file in files:
+        if file.suffix not in [".txt", ".md", ".pdf"]:
+            continue
+
+        content = read_document(file)
+
+        if content is None:
+            continue
+
+        for line_number, line in enumerate(content.splitlines(), start=1):
+            line_lower = line.lower()
+
+            for keyword in keywords:
+                if keyword in line_lower:
+                    relevant_lines.append({
+                        "file": file.name,
+                        "line_number": line_number,
+                        "text": line.strip()
+                    })
+                    break
+
+    return relevant_lines
+
+def ask_about_documents():
+    question = input("Zadaj otazku k dokumentom: ").strip()
+
+    if not question:
+        print("Otazka nemoze byt prazdna.")
+        return
+
+    relevant_lines = find_relevant_lines(question)
+
+    if not relevant_lines:
+        print("Nenasli sa ziadne relevantne pasaze v dokumentoch.")
+        return
+
+    context = ""
+
+    for item in relevant_lines[:10]:
+        context += f"Subor: {item['file']}, riadok {item['line_number']}\n"
+        context += f"{item['text']}\n\n"
+
+    prompt = f"""
+Odpovedz na otazku pouzivatela iba na zaklade nasledujucich pasazi z dokumentov.
+
+Otazka:
+{question}
+
+Pasaze:
+{context}
+
+Odpovedz po slovensky. Ak odpoved z pasazi nevyplyva, napis, ze v dokumentoch nie je dostatok informacii.
+"""
+
+    print("\nGenerujem odpoved...\n")
+
+    answer = ask_ai(prompt)
+    print(answer)
+
+
 def read_pdf(file):
     reader = PdfReader(file)
 
@@ -190,7 +257,8 @@ def show_menu():
     print("2. Vyhladat vyraz")
     print("3. Test AI")
     print("4. Zhrnut dokument")
-    print("5. Ukoncit")
+    print("5. Opytat sa na dokumenty")
+    print("6. Ukoncit")
 
 
 def main(): # hlavna funkcia programu
@@ -208,6 +276,8 @@ def main(): # hlavna funkcia programu
         elif choice == "4":
             summarize_document()
         elif choice == "5":
+            ask_about_documents()
+        elif choice == "6":
             print("Ukoncenie programu")
             break
         else:
