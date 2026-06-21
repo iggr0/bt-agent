@@ -2,12 +2,13 @@ from ai import ask_ai
 from loader import list_files, filter_by_suffix, read_document, read_document_pages
 from search import search_term_in_files
 from embeddings import get_cached_index, find_relevant_chunks, chunk_label
+from prompts import summary_prompt, qa_prompt, strip_markdown
 from errors import OllamaError
 
 
 def test_ai():
     answer = ask_ai(
-        "V jednej vete vysvetli, co je umela inteligencia."
+        "V jednej vete vysvetli, čo je umelá inteligencia."
     )
 
     print(answer)
@@ -15,10 +16,10 @@ def test_ai():
 
 def filter_documents(files):
     print("\nFiltrovanie dokumentov:")
-    print("1. Vsetky")
+    print("1. Všetky")
     print("2. PDF")
 
-    choice = input("Vyber moznost: ")
+    choice = input("Vyber možnosť: ")
 
     if choice == "1":
         return files
@@ -27,7 +28,7 @@ def filter_documents(files):
         return filter_by_suffix(files, [".pdf"])
 
     else:
-        print("Neplatna moznost!")
+        print("Neplatná možnosť!")
         return files
 
 
@@ -37,16 +38,16 @@ def select_document(files):
     for index, file in enumerate(files, start=1):
         print(f"{index}. {file.name}")
 
-    choice = input("Zadaj cislo dokumentu: ")
+    choice = input("Zadaj číslo dokumentu: ")
 
     if not choice.isdigit():
-        print("Musis zadat cislo.")
+        print("Musíš zadať číslo.")
         return None
 
     choice = int(choice)
 
     if choice < 1 or choice > len(files):
-        print("Neplatne cislo dokumentu.")
+        print("Neplatné číslo dokumentu.")
         return None
 
     return files[choice - 1]
@@ -56,7 +57,7 @@ def show_document_content(file):
     content = read_document(file)
 
     if content is None:
-        print("Tento typ suboru zatial nevieme zobrazit.")
+        print("Tento typ súboru zatiaľ nevieme zobraziť.")
         return
 
     print(f"\nObsah dokumentu: {file.name}\n")
@@ -67,16 +68,16 @@ def list_documents():
     files = filter_by_suffix(list_files())
 
     if not files:
-        print("Priecinok data je prazdny!")
+        print("Priečinok data je prázdny!")
         return
 
     files = filter_documents(files)
 
     if not files:
-        print("Nenasli sa ziadne dokumenty pre vybrany filter.")
+        print("Nenašli sa žiadne dokumenty pre vybraný filter.")
         return
 
-    print("\nDostupne dokumenty:")
+    print("\nDostupné dokumenty:")
 
     for file in files:
         print(f"- {file.name}")
@@ -91,16 +92,16 @@ def list_documents():
 
 def search_in_documents():
     files = filter_by_suffix(list_files())
-    search_term = input("Zadaj hladany vyraz: ").strip()
+    search_term = input("Zadaj hľadaný výraz: ").strip()
 
     matches = search_term_in_files(files, search_term)
 
     if not matches:
-        print("Vyraz sa nenasiel v ziadnom dokumente!")
+        print("Výraz sa nenašiel v žiadnom dokumente!")
         return
 
     for match in matches:
-        print(f"\nNajdene v subore: {match['file']}")
+        print(f"\nNájdené v súbore: {match['file']}")
         print(f"Riadok {match['line_number']}")
         print(f"-> {match['text']}")
 
@@ -109,7 +110,7 @@ def summarize_document():
     files = filter_by_suffix(list_files())
 
     if not files:
-        print("Priecinok data je prazdny!")
+        print("Priečinok data je prázdny!")
         return
 
     selected_file = select_document(files)
@@ -120,31 +121,23 @@ def summarize_document():
     content = read_document(selected_file)
 
     if content is None:
-        print("Tento typ suboru zatial nevieme zhrnut.")
+        print("Tento typ súboru zatiaľ nevieme zhrnúť.")
         return
 
     if not content.strip():
-        print("Dokument je prazdny alebo sa nepodarilo nacitat text.")
+        print("Dokument je prázdny alebo sa nepodarilo načítať text.")
         return
 
-    prompt = f"""
-Zhrn nasledujuci dokument po slovensky.
-Zameraj sa na hlavne myslienky, dolezite pojmy a prakticky vyznam.
-
-Dokument:
-{content}
-"""
-
     print("\nGenerujem zhrnutie...\n")
-    summary = ask_ai(prompt)
+    summary = strip_markdown(ask_ai(summary_prompt(content)))
     print(summary)
 
 
 def ask_about_documents():
-    question = input("Zadaj otazku k dokumentom: ").strip()
+    question = input("Zadaj otázku k dokumentom: ").strip()
 
     if not question:
-        print("Otazka nemoze byt prazdna.")
+        print("Otázka nemôže byť prázdna.")
         return
 
     files = filter_by_suffix(list_files())
@@ -152,66 +145,45 @@ def ask_about_documents():
     index, was_rebuilt = get_cached_index(files, read_document_pages)
 
     if was_rebuilt:
-        print("\nDokumenty zindexovane.")
+        print("\nDokumenty zaindexované.")
 
     if not index:
-        print("Priecinok data je prazdny alebo dokumenty sa nepodarilo nacitat.")
+        print("Priečinok data je prázdny alebo dokumenty sa nepodarilo načítať.")
         return
 
     relevant_chunks = find_relevant_chunks(index, question)
 
     if not relevant_chunks:
-        print("Nenasli sa ziadne relevantne pasaze v dokumentoch.")
+        print("Nenašli sa žiadne relevantné pasáže v dokumentoch.")
         return
 
-    print("\nPouzite zdroje:")
+    print("\nPoužité zdroje:")
 
     for chunk in relevant_chunks:
-        print(f"\n[{chunk_label(chunk)}, skore {chunk['score']:.2f}]")
+        print(f"\n[{chunk_label(chunk)}, skóre {chunk['score']:.2f}]")
         print(chunk['text'])
 
-    context = ""
+    print("\nGenerujem odpoveď...\n")
 
-    for chunk in relevant_chunks:
-        context += f"Zdroj: {chunk_label(chunk)}\n"
-        context += f"{chunk['text']}\n\n"
-
-    prompt = f"""
-Odpovedz na otazku pouzivatela iba na zaklade nasledujucich pasazi z dokumentov.
-Kazda pasaz ma uvedeny svoj zdroj na riadku "Zdroj: ...". Za kazdym tvrdenim,
-ktore z pasaze vyplyva, uved citaciu v hranatych zatvorkach s presnym textom
-daneho zdroja, napriklad [clanok.pdf, strana 1].
-
-Otazka:
-{question}
-
-Pasaze:
-{context}
-
-Odpovedz po slovensky. Ak odpoved z pasazi nevyplyva, napis, ze v dokumentoch nie je dostatok informacii.
-"""
-
-    print("\nGenerujem odpoved...\n")
-
-    answer = ask_ai(prompt)
+    answer = ask_ai(qa_prompt(question, relevant_chunks))
     print(answer)
 
 
 def show_menu():
     print("\nBP Agent")
-    print("1. Zobrazit dokumenty")
-    print("2. Vyhladat vyraz")
+    print("1. Zobraziť dokumenty")
+    print("2. Vyhľadať výraz")
     print("3. Test AI")
-    print("4. Zhrnut dokument")
-    print("5. Opytat sa na dokumenty")
-    print("6. Ukoncit")
+    print("4. Zhrnúť dokument")
+    print("5. Opýtať sa na dokumenty")
+    print("6. Ukončiť")
 
 
 def main():
     while True:
         show_menu()
 
-        choice = input("Vyber moznost: ")
+        choice = input("Vyber možnosť: ")
 
         try:
             if choice == "1":
@@ -225,9 +197,9 @@ def main():
             elif choice == "5":
                 ask_about_documents()
             elif choice == "6":
-                print("Ukoncenie programu")
+                print("Ukončenie programu")
                 break
             else:
-                print("Neplatna moznost!")
+                print("Neplatná možnosť!")
         except OllamaError as error:
             print(f"\n{error}")

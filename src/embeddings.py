@@ -33,7 +33,7 @@ def embed_texts(texts):
         response = embed(model=EMBED_MODEL, input=texts)
     except Exception as error:
         raise OllamaError(
-            f"Nepodarilo sa vypocitat embeddings (model {EMBED_MODEL}). Skontroluj, ze Ollama bezi."
+            f"Nepodarilo sa vypočítať embeddings (model {EMBED_MODEL}). Skontroluj, že Ollama beží."
         ) from error
 
     return response["embeddings"]
@@ -78,7 +78,7 @@ def chunk_label(chunk):
     if chunk["page"] is not None:
         return f"{chunk['file']}, strana {chunk['page']}"
 
-    return f"{chunk['file']}, cast {chunk['chunk_index']}"
+    return f"{chunk['file']}, časť {chunk['chunk_index']}"
 
 
 def build_index(files, read_document_pages):

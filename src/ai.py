@@ -17,7 +17,7 @@ def ask_ai(question):
         )
     except Exception as error:
         raise OllamaError(
-            f"Nepodarilo sa spojit s Ollama (model {MODEL}). Skontroluj, ze Ollama bezi."
+            f"Nepodarilo sa spojiť s Ollama (model {MODEL}). Skontroluj, že Ollama beží."
         ) from error
 
     return response["message"]["content"]
