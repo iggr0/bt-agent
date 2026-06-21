@@ -1,7 +1,8 @@
 from ai import ask_ai
 from loader import list_files, filter_by_suffix, read_document, read_document_pages
 from search import search_term_in_files
-from embeddings import build_index, find_relevant_chunks, chunk_label
+from embeddings import get_cached_index, find_relevant_chunks, chunk_label
+from errors import OllamaError
 
 
 def test_ai():
@@ -148,8 +149,10 @@ def ask_about_documents():
 
     files = filter_by_suffix(list_files())
 
-    print("\nIndexujem dokumenty...")
-    index = build_index(files, read_document_pages)
+    index, was_rebuilt = get_cached_index(files, read_document_pages)
+
+    if was_rebuilt:
+        print("\nDokumenty zindexovane.")
 
     if not index:
         print("Priecinok data je prazdny alebo dokumenty sa nepodarilo nacitat.")
@@ -210,18 +213,21 @@ def main():
 
         choice = input("Vyber moznost: ")
 
-        if choice == "1":
-            list_documents()
-        elif choice == "2":
-            search_in_documents()
-        elif choice == "3":
-            test_ai()
-        elif choice == "4":
-            summarize_document()
-        elif choice == "5":
-            ask_about_documents()
-        elif choice == "6":
-            print("Ukoncenie programu")
-            break
-        else:
-            print("Neplatna moznost!")
+        try:
+            if choice == "1":
+                list_documents()
+            elif choice == "2":
+                search_in_documents()
+            elif choice == "3":
+                test_ai()
+            elif choice == "4":
+                summarize_document()
+            elif choice == "5":
+                ask_about_documents()
+            elif choice == "6":
+                print("Ukoncenie programu")
+                break
+            else:
+                print("Neplatna moznost!")
+        except OllamaError as error:
+            print(f"\n{error}")

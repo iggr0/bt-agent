@@ -1,5 +1,6 @@
 import math
 from ollama import embed
+from errors import OllamaError
 
 EMBED_MODEL = "nomic-embed-text"
 CHUNK_SIZE = 200
@@ -28,7 +29,13 @@ def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
 
 
 def embed_texts(texts):
-    response = embed(model=EMBED_MODEL, input=texts)
+    try:
+        response = embed(model=EMBED_MODEL, input=texts)
+    except Exception as error:
+        raise OllamaError(
+            f"Nepodarilo sa vypocitat embeddings (model {EMBED_MODEL}). Skontroluj, ze Ollama bezi."
+        ) from error
+
     return response["embeddings"]
 
 
@@ -86,6 +93,29 @@ def build_index(files, read_document_pages):
         chunk["embedding"] = vector
 
     return chunks
+
+
+_index_cache = {"signature": None, "index": []}
+
+
+def _files_signature(files):
+    return tuple(sorted(
+        (file.name, file.stat().st_mtime, file.stat().st_size)
+        for file in files
+    ))
+
+
+def get_cached_index(files, read_document_pages):
+    """Vrati (index, bol_znovu_vypocitany). Index sa prepocita iba ak sa
+    zmenili nazvy, velkosti alebo casy poslednej upravy suborov v data/."""
+    signature = _files_signature(files)
+
+    if signature != _index_cache["signature"]:
+        _index_cache["index"] = build_index(files, read_document_pages)
+        _index_cache["signature"] = signature
+        return _index_cache["index"], True
+
+    return _index_cache["index"], False
 
 
 def find_relevant_chunks(index, question, top_k=5):

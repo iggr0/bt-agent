@@ -30,25 +30,32 @@ def read_pdf(file):
 
 
 def read_document(file):
-    if file.suffix == ".pdf":
-        return read_pdf(file)
+    try:
+        if file.suffix == ".pdf":
+            return read_pdf(file)
 
-    elif file.suffix in [".txt", ".md"]:
-        return file.read_text(encoding="utf-8")
+        elif file.suffix in [".txt", ".md"]:
+            return file.read_text(encoding="utf-8")
 
-    else:
+        else:
+            return None
+    except Exception:
         return None
 
 
 def read_document_pages(file):
     """Vrati list (cislo_strany, text). Pre .pdf je strana cislo strany v dokumente,
-    pre .txt/.md je strana None, kedze tieto formaty stranovanie nemaju."""
-    if file.suffix == ".pdf":
-        reader = PdfReader(file)
-        return [(index + 1, page.extract_text() or "") for index, page in enumerate(reader.pages)]
+    pre .txt/.md je strana None, kedze tieto formaty stranovanie nemaju.
+    Ak sa subor neda nacitat (napr. poskodene pdf), vrati None."""
+    try:
+        if file.suffix == ".pdf":
+            reader = PdfReader(file)
+            return [(index + 1, page.extract_text() or "") for index, page in enumerate(reader.pages)]
 
-    elif file.suffix in [".txt", ".md"]:
-        return [(None, file.read_text(encoding="utf-8"))]
+        elif file.suffix in [".txt", ".md"]:
+            return [(None, file.read_text(encoding="utf-8"))]
 
-    else:
+        else:
+            return None
+    except Exception:
         return None
