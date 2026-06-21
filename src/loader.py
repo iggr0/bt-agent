@@ -38,3 +38,17 @@ def read_document(file):
 
     else:
         return None
+
+
+def read_document_pages(file):
+    """Vrati list (cislo_strany, text). Pre .pdf je strana cislo strany v dokumente,
+    pre .txt/.md je strana None, kedze tieto formaty stranovanie nemaju."""
+    if file.suffix == ".pdf":
+        reader = PdfReader(file)
+        return [(index + 1, page.extract_text() or "") for index, page in enumerate(reader.pages)]
+
+    elif file.suffix in [".txt", ".md"]:
+        return [(None, file.read_text(encoding="utf-8"))]
+
+    else:
+        return None

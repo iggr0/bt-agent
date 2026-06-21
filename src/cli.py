@@ -1,7 +1,7 @@
 from ai import ask_ai
-from loader import list_files, filter_by_suffix, read_document
+from loader import list_files, filter_by_suffix, read_document, read_document_pages
 from search import search_term_in_files
-from embeddings import build_index, find_relevant_chunks
+from embeddings import build_index, find_relevant_chunks, chunk_label
 
 
 def test_ai():
@@ -149,7 +149,7 @@ def ask_about_documents():
     files = filter_by_suffix(list_files())
 
     print("\nIndexujem dokumenty...")
-    index = build_index(files, read_document)
+    index = build_index(files, read_document_pages)
 
     if not index:
         print("Priecinok data je prazdny alebo dokumenty sa nepodarilo nacitat.")
@@ -164,17 +164,20 @@ def ask_about_documents():
     print("\nPouzite zdroje:")
 
     for chunk in relevant_chunks:
-        print(f"\n[{chunk['file']}, cast {chunk['chunk_index']}, skore {chunk['score']:.2f}]")
+        print(f"\n[{chunk_label(chunk)}, skore {chunk['score']:.2f}]")
         print(chunk['text'])
 
     context = ""
 
     for chunk in relevant_chunks:
-        context += f"Subor: {chunk['file']}, cast {chunk['chunk_index']}\n"
+        context += f"Zdroj: {chunk_label(chunk)}\n"
         context += f"{chunk['text']}\n\n"
 
     prompt = f"""
 Odpovedz na otazku pouzivatela iba na zaklade nasledujucich pasazi z dokumentov.
+Kazda pasaz ma uvedeny svoj zdroj na riadku "Zdroj: ...". Za kazdym tvrdenim,
+ktore z pasaze vyplyva, uved citaciu v hranatych zatvorkach s presnym textom
+daneho zdroja, napriklad [clanok.pdf, strana 1].
 
 Otazka:
 {question}

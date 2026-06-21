@@ -43,27 +43,39 @@ def cosine_similarity(a, b):
     return dot / (norm_a * norm_b)
 
 
-def build_chunks(files, read_document):
+def build_chunks(files, read_document_pages):
     chunks = []
 
     for file in files:
-        content = read_document(file)
+        pages = read_document_pages(file)
 
-        if not content:
+        if not pages:
             continue
 
-        for index, text in enumerate(chunk_text(content)):
-            chunks.append({
-                "file": file.name,
-                "chunk_index": index,
-                "text": text
-            })
+        for page_number, page_text in pages:
+            if not page_text:
+                continue
+
+            for chunk_index, text in enumerate(chunk_text(page_text)):
+                chunks.append({
+                    "file": file.name,
+                    "page": page_number,
+                    "chunk_index": chunk_index,
+                    "text": text
+                })
 
     return chunks
 
 
-def build_index(files, read_document):
-    chunks = build_chunks(files, read_document)
+def chunk_label(chunk):
+    if chunk["page"] is not None:
+        return f"{chunk['file']}, strana {chunk['page']}"
+
+    return f"{chunk['file']}, cast {chunk['chunk_index']}"
+
+
+def build_index(files, read_document_pages):
+    chunks = build_chunks(files, read_document_pages)
 
     if not chunks:
         return []
