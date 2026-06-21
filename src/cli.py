@@ -1,6 +1,7 @@
 from ai import ask_ai
 from loader import list_files, filter_by_suffix, read_document
-from search import search_term_in_files, find_relevant_lines
+from search import search_term_in_files
+from embeddings import build_index, find_relevant_chunks
 
 
 def test_ai():
@@ -146,23 +147,31 @@ def ask_about_documents():
         return
 
     files = filter_by_suffix(list_files())
-    relevant_lines = find_relevant_lines(files, question)
 
-    if not relevant_lines:
+    print("\nIndexujem dokumenty...")
+    index = build_index(files, read_document)
+
+    if not index:
+        print("Priecinok data je prazdny alebo dokumenty sa nepodarilo nacitat.")
+        return
+
+    relevant_chunks = find_relevant_chunks(index, question)
+
+    if not relevant_chunks:
         print("Nenasli sa ziadne relevantne pasaze v dokumentoch.")
         return
 
     print("\nPouzite zdroje:")
 
-    for item in relevant_lines[:5]:
-        print(f"\n[{item['file']}, riadok {item['line_number']}]")
-        print(item['text'])
+    for chunk in relevant_chunks:
+        print(f"\n[{chunk['file']}, cast {chunk['chunk_index']}, skore {chunk['score']:.2f}]")
+        print(chunk['text'])
 
     context = ""
 
-    for item in relevant_lines[:10]:
-        context += f"Subor: {item['file']}, riadok {item['line_number']}\n"
-        context += f"{item['text']}\n\n"
+    for chunk in relevant_chunks:
+        context += f"Subor: {chunk['file']}, cast {chunk['chunk_index']}\n"
+        context += f"{chunk['text']}\n\n"
 
     prompt = f"""
 Odpovedz na otazku pouzivatela iba na zaklade nasledujucich pasazi z dokumentov.
