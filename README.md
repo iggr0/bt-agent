@@ -27,6 +27,16 @@ ollama pull qwen3:8b
 ollama pull nomic-embed-text
 ```
 
+## Stiahnutie projektu
+
+Naklonuj repozitar (alebo si ho stiahni cez GitHub tlacidlo "Code > Download ZIP"
+a rozbal):
+
+```
+git clone https://github.com/iggr0/bt-agent.git
+cd bt-agent
+```
+
 ## Instalacia
 
 ```
@@ -37,8 +47,24 @@ pip install -r requirements.txt
 
 ## Pouzitie
 
-Dokumenty (`.pdf`, `.txt`, `.md`) vloz do priecinka `data/`, potom spusti
-program z korenoveho priecinka projektu:
+Dokumenty (`.pdf`, `.txt`, `.md`) vloz do priecinka `data/`.
+
+### Graficke rozhranie (Windows)
+
+Najjednoduchsi sposob spustenia - staci dvojklik na `bt-agent.bat`
+v korenovom priecinku projektu. Otvori sa okno aplikacie s zalozkami
+Dokumenty, Vyhladat, Zhrnut a Otazky.
+
+Skript ocakava, ze virtualne prostredie `.venv` uz existuje a ma
+nainstalovane zavislosti (pozri Instalacia vyssie).
+
+### Graficke rozhranie (manualne, vsetky platformy)
+
+```
+python src/gui.py
+```
+
+### Terminalove rozhranie
 
 ```
 python src/main.py
@@ -55,8 +81,11 @@ src/
   search.py      - presne vyhladavanie vyrazu v dokumentoch
   embeddings.py  - chunkovanie, embeddings, semanticke vyhladavanie (RAG)
   ai.py          - komunikacia s lokalnym LLM (Ollama)
+  prompts.py     - zostavovanie promptov pre AI (zhrnutie, otazky)
   errors.py      - vlastne vynimky
   cli.py         - terminalove uzivatelske rozhranie
-  main.py        - vstupny bod programu
+  gui.py         - graficke uzivatelske rozhranie (Tkinter)
+  main.py        - vstupny bod terminaloveho rozhrania
 data/            - vlozene dokumenty
+bt-agent.bat     - rychle spustenie grafickeho rozhrania (Windows)
 ```
